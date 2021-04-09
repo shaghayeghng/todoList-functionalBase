@@ -1,25 +1,71 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState, useEffect } from 'react';  //*useEffect for lifecycle methods
+import { Route, Switch } from 'react-router-dom';
+import Nav from './components/Nav';
+import AuthPage from './pages/AuthPage';
+import TodoListPage from './pages/TodoListPage';
+import HomePage from './pages/HomePage';
+import ProtectedRoute from './ProtectedRoute';
+import Cookies from 'universal-cookie';
 
-function App() {
+import './app.css';
+
+const App = () => {
+  //states
+  const [isAuthenticated, setIsAuthenticated] = useState(false);  //function setState hame be pre state hame be state dastresi darim
+  const [username, setUsername] = useState('');
+
+  const cookie = new Cookies();
+  
+  // componentDidMount
+  useEffect(() => {
+    // console.log('runned1');
+    const authCookie = cookie.get('token');
+    authCookie ? authHandler() : logoutHandler();
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); 
+  //! [] --> initial render
+  //! nothing --> inotial render and run after every rerender
+  //! [data] --> initial render and run if the data change
+
+  const authHandler = () => {
+    setIsAuthenticated(true);
+  };
+    
+  const logoutHandler = () => {
+    setIsAuthenticated(false);
+    cookie.remove('token');
+  };
+  // const usernameHandler = (term) => { //! setUsername
+  //   setState({ username: term });
+  // }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
+    <>
+      <Nav 
+        isAuthenticated={isAuthenticated}
+        logoutHandler={logoutHandler}
+        username={username}
+      />
+      <Switch>
+        <Route path='/' exact component={HomePage} />
+        <Route path='/auth'>
+          <AuthPage
+            isAuthenticated={isAuthenticated}
+            authHandler={authHandler} 
+          />
+          </Route> 
+            
+        <ProtectedRoute
+          auth={isAuthenticated}
+          path='/todolist'
         >
-          Learn React
-        </a>
-      </header>
-    </div>
+            <TodoListPage setUsername={setUsername} /> 
+        </ProtectedRoute>
+        {/*age mese balayi bashe byd to ProtectedRoute ...rest ezafe koni*/}
+      </Switch>
+    </>
   );
-}
+};
 
 export default App;
